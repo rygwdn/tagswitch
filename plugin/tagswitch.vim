@@ -37,6 +37,8 @@ fun! TagSwitch(...)
     "echom "precmd" precmd
 
     let toName = expand("%:t:r")
+    let toName = substitute(toName, "_tests\\?$", "", "")
+
     for ft in split(&ft, '\.')
         let realKey = argKey
         if realKey == ""
@@ -82,15 +84,28 @@ fun! TagSwitch(...)
             endfor
         endfor
     endfor
-    echoerr "Unable to find tag matching request"
+    echoerr "Unable to find tag matching request" toName
+endfunc
+
+function! TagSwitchAbove(...)
+    call call("TagSwitch", a:000 + ['let cursb=&sb | set nosb | split | if cursb | set sb | endif'])
+endfunc
+function! TagSwitchBelow(...)
+    call call("TagSwitch", a:000 + ['let cursb=&sb | set nosb | split | wincmd j | if cursb | set sb | endif'])
+endfunc
+function! TagSwitchLeft(...)
+    call call("TagSwitch", a:000 + ['let curspr=&spr | set nospr | vsplit | if curspr | set spr | endif'])
+endfunc
+function! TagSwitchRight(...)
+    call call("TagSwitch", a:000 + ['let curspr=&spr | set nospr | vsplit | wincmd l | if curspr | set spr | endif'])
 endfunc
 
 " TODO: add -bang to create a file in the "right" spot (find closest cpp or hpp)
 com! -nargs=? TagSwitchHere call TagSwitch(<f-args>)
-com! -nargs=? TagSwitchAbove call TagSwitch(<f-args>, 'let cursb=&sb | set nosb | split | if cursb | set sb | endif')
-com! -nargs=? TagSwitchBelow call TagSwitch(<f-args>, 'let cursb=&sb | set nosb | split | wincmd j | if cursb | set sb | endif')
-com! -nargs=? TagSwitchRight call TagSwitch(<f-args>, 'let curspr=&spr | set nospr | vsplit | wincmd l | if curspr | set spr | endif')
-com! -nargs=? TagSwitchLeft call TagSwitch(<f-args>, 'let curspr=&spr | set nospr | vsplit | if curspr | set spr | endif')
+com! -nargs=? TagSwitchAbove call TagSwitchAbove(<f-args>)
+com! -nargs=? TagSwitchBelow call TagSwitchBelow(<f-args>)
+com! -nargs=? TagSwitchRight call TagSwitchRight(<f-args>)
+com! -nargs=? TagSwitchLeft call TagSwitchLeft(<f-args>)
 
 function! MapTS(lead, direction, cmd, arg)
     execute "nmap" a:lead . a:direction ":TagSwitch" . a:cmd  a:arg . "<CR>"
@@ -120,9 +135,9 @@ endfun
 
 function! MapTagSwitch(lead, ...)
     call MapSplits("", a:lead, ["f"] + a:000)
-    call MapSplits("src", a:lead . "s", ["s", "f"] + a:000)
-    call MapSplits("header", a:lead . "t", ["i", "f"] + a:000)
-    call MapSplits("test", a:lead . "t", ["t", "f"] + a:000)
+    call MapSplits("src", a:lead . "s", ["s", "f", ""] + a:000)
+    call MapSplits("header", a:lead . "t", ["i", "f", ""] + a:000)
+    call MapSplits("test", a:lead . "t", ["t", "f", ""] + a:000)
 endfunc
 
 call MapTagSwitch(",f", "f")
