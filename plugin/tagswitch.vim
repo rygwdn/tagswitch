@@ -16,7 +16,7 @@ fun! TagSwitch(...)
     let argKey = ""
     let precmd = ""
 
-    echom "got args" len(a:000)
+    "echom "got args" len(a:000)
     for qarg in a:000
         if qarg =~ "^\".*\"$"
             " Strip quotes
@@ -25,33 +25,33 @@ fun! TagSwitch(...)
         if qarg == ""
             continue
         elseif index(["src", "header", "test"], qarg) >= 0
-            echom "  argkey" qarg
+            "echom "  argkey" qarg
             let argKey = qarg
         else
-            echom "  precmd" qarg
+            "echom "  precmd '" . qarg . "'"
             let precmd = qarg
         endif
     endfor
 
-    echom "argKey" argKey
-    echom "precmd" precmd
+    "echom "argKey" argKey
+    "echom "precmd" precmd
 
     let toName = expand("%:t:r")
     for ft in split(&ft, '\.')
         let realKey = argKey
         if realKey == ""
             let fileExt = "." . expand("%:e")
-            echom "ext" fileExt ft
+            "echom "ext" fileExt ft
             for tryKey in [ "header", "src" ]
                 if realKey != ""
                     break
                 endif
-                echom "tryKey" tryKey
+                "echom "tryKey" tryKey
                 for ext in s:mapping[ft][tryKey]
                     if realKey != ""
                         break
                     endif
-                    echom "tryExt" ext
+                    "echom "tryExt" ext
                     if ext == fileExt
                         if tryKey == "header"
                             let realKey = "src"
@@ -63,13 +63,13 @@ fun! TagSwitch(...)
             endfor
         endif
         if realKey == ""
-            echom "unable to find a type for file"
+            "echom "unable to find a type for file"
             continue
         endif
 
         let extensions = s:mapping[ft][realKey]
         for ext in extensions
-            echom "try" ft realKey ext
+            "echom "try" ft realKey ext
             let headerSearch = "^" . toName . ext . "$"
             for header in taglist(headerSearch)
                 if header["kind"] == "F"
@@ -93,8 +93,8 @@ com! -nargs=? TagSwitchRight call TagSwitch(<f-args>, 'let curspr=&spr | set nos
 com! -nargs=? TagSwitchLeft call TagSwitch(<f-args>, 'let curspr=&spr | set nospr | vsplit | if curspr | set spr | endif')
 
 function! MapTS(lead, direction, cmd, arg)
-    execute "nmap" a:lead . a:direction ":TagSwitch" . a:cmd  a:arg "<CR>"
-    "echo "execute nmap" a:lead . direction ":" . cmd  a:firstArg "<CR>"
+    execute "nmap" a:lead . a:direction ":TagSwitch" . a:cmd  a:arg . "<CR>"
+    "echo "execute nmap" a:lead . direction ":" . cmd  a:firstArg . "<CR>"
 endfun
 
 function! MapSplits(arg, lead, extra)
