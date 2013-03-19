@@ -100,7 +100,11 @@ function! TagSwitchRight(...)
     call call("TagSwitch", a:000 + ['let curspr=&spr | set nospr | vsplit | wincmd l | if curspr | set spr | endif'])
 endfunc
 
-" TODO: add -bang to create a file in the "right" spot (find closest cpp or hpp)
+" TODO: add -bang to create a file in the "right" spot
+"       - if there is are hpp/cpp files next to this one, find their pairs and
+"       prompt for location
+"       - else, look through file tags, and find closest locations
+" TODO: prompt if multiple matches, and remember choice
 com! -nargs=? TagSwitchHere call TagSwitch(<f-args>)
 com! -nargs=? TagSwitchAbove call TagSwitchAbove(<f-args>)
 com! -nargs=? TagSwitchBelow call TagSwitchBelow(<f-args>)
