@@ -11,6 +11,37 @@ let s:mapping = {
             \   }
             \ }
 
+function! Levenshtein_distance(str1, str2)
+    let str1_chars = split(a:str1, '\zs') | let str1_len = len(str1_chars)
+    let str2_chars = split(a:str2, '\zs') | let str2_len = len(str2_chars)
+
+    let matrix = []
+    let y = 0
+    while y <= str2_len
+        let row = range(0, str1_len)
+        let row[0] = y
+        call add(matrix, row)
+        let y += 1
+    endwhile
+
+    let y = 1
+    while y <= str2_len
+        let x = 1
+        while x <= str1_len
+            let cost = !(str1_chars[x - 1] ==# str2_chars[y - 1])
+            let matrix[y][x] = min([
+                        \ matrix[y][x - 1] + 1,
+                        \ matrix[y - 1][x] + 1,
+                        \ matrix[y - 1][x - 1] + cost,
+                        \ ])
+            let x += 1
+        endwhile
+        let y += 1
+    endwhile
+
+    return matrix[str2_len][str1_len]
+endfunction
+
 "key, precmd
 fun! TagSwitch(...)
     let argKey = ""
@@ -36,6 +67,7 @@ fun! TagSwitch(...)
     "echom "argKey" argKey
     "echom "precmd" precmd
 
+    let fullFromName = expand("%:p")
     let toName = expand("%:t:r")
     let toName = substitute(toName, "_tests\\?$", "", "")
 
@@ -73,15 +105,24 @@ fun! TagSwitch(...)
         for ext in extensions
             "echom "try" ft realKey ext
             let headerSearch = "^" . toName . ext . "$"
+            let best = ""
+            let best_dist = -1
             for header in taglist(headerSearch)
                 if header["kind"] == "F"
-                    if strlen(precmd) != 0
-                        execute precmd
+                    let dist = Levenshtein_distance(header["filename"], fullFromName)
+                    if dist < best_dist || best_dist == -1
+                        let best_dist  = dist
+                        let best = header["filename"]
                     endif
-                    execute "edit " . fnameescape(header["filename"])
-                    return
                 endif
             endfor
+            if strlen(best) != 0
+                if strlen(precmd) != 0
+                    execute precmd
+                endif
+                execute "edit " . fnameescape(header["filename"])
+                return
+            endif
         endfor
     endfor
     echoerr "Unable to find tag matching request" toName
